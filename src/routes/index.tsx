@@ -129,6 +129,14 @@ function SceneListPage() {
                     {scene.style_preset}
                   </span>
                 </div>
+                <div className="mt-3">
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-secondary">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all"
+                      style={{ width: `${((counts[scene.id] ?? 0) / 12) * 100}%` }}
+                    />
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
