@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SceneNewRouteImport } from './routes/scene/new'
+import { Route as SceneIdRouteImport } from './routes/scene/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SceneNewRoute = SceneNewRouteImport.update({
+  id: '/scene/new',
+  path: '/scene/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SceneIdRoute = SceneIdRouteImport.update({
+  id: '/scene/$id',
+  path: '/scene/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/scene/$id': typeof SceneIdRoute
+  '/scene/new': typeof SceneNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/scene/$id': typeof SceneIdRoute
+  '/scene/new': typeof SceneNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/scene/$id': typeof SceneIdRoute
+  '/scene/new': typeof SceneNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/scene/$id' | '/scene/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/scene/$id' | '/scene/new'
+  id: '__root__' | '/' | '/scene/$id' | '/scene/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SceneIdRoute: typeof SceneIdRoute
+  SceneNewRoute: typeof SceneNewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/scene/new': {
+      id: '/scene/new'
+      path: '/scene/new'
+      fullPath: '/scene/new'
+      preLoaderRoute: typeof SceneNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scene/$id': {
+      id: '/scene/$id'
+      path: '/scene/$id'
+      fullPath: '/scene/$id'
+      preLoaderRoute: typeof SceneIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SceneIdRoute: SceneIdRoute,
+  SceneNewRoute: SceneNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
