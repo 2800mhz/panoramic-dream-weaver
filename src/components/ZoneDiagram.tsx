@@ -39,26 +39,27 @@ function getSliceAngles(slice: number): { start: number; end: number } {
   return { start, end };
 }
 
-function isPointInSegment(
-  x: number, y: number,
-  zone: number, slice: number
-): boolean {
+function isPointInSegment(x: number, y: number, zone: number, slice: number): boolean {
   const dx = x - CX;
   const dy = y - CY;
   const dist = Math.sqrt(dx * dx + dy * dy);
   const r = ZONE_RADII[zone - 1];
   if (dist < r.inner || dist > r.outer) return false;
 
-  let angle = Math.atan2(dy, dx);
-  if (angle < 0) angle += 2 * Math.PI;
+  let angle = Math.atan2(dy, dx); // -PI to PI
+  if (angle < 0) angle += 2 * Math.PI; // 0 to 2PI
 
   const { start, end } = getSliceAngles(slice);
-  // Normalize angles for comparison (handle wrap-around)
-  const normAngle = angle < VISIBLE_START ? angle + 2 * Math.PI : angle;
-  const normStart = start;
-  const normEnd = end;
+  // Normalize start and end to 0-2PI range
+  const normStart = ((start % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  const normEnd = ((end % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
 
-  return normAngle >= normStart && normAngle <= normEnd;
+  if (normStart <= normEnd) {
+    return angle >= normStart && angle <= normEnd;
+  } else {
+    // Wraps around 0/2PI boundary
+    return angle >= normStart || angle <= normEnd;
+  }
 }
 
 function getSegmentCentroid(zone: number, slice: number): { x: number; y: number } {

@@ -66,8 +66,8 @@ export default function SegmentPanel({
 
   // Auto-save on blur with debounce
   const handleBlur = useCallback(() => {
-    if (!selected || !contentDesc) return;
-    const timeout = setTimeout(handleSave, 800);
+    if (!selected || !contentDesc.trim()) return;
+    const timeout = setTimeout(() => { handleSave(); }, 800);
     return () => clearTimeout(timeout);
   }, [handleSave, selected, contentDesc]);
 
@@ -153,30 +153,25 @@ export default function SegmentPanel({
         </button>
         <button
           onClick={async () => {
-            // Save first, then generate
-            if (contentDesc) {
-              await handleSave();
-              const updatedSeg = segments.find(s => s.zone === selected.zone && s.slice === selected.slice);
-              if (updatedSeg) {
-                await onGeneratePrompt(updatedSeg);
-              } else {
-                // Create a temporary segment object for generation
-                await onGeneratePrompt({
-                  id: '',
-                  scene_id: sceneId,
-                  zone: selected.zone,
-                  slice: selected.slice,
-                  content_desc: contentDesc,
-                  extra_notes: extraNotes,
-                  generated_prompt: null,
-                  image_url: null,
-                  status: 'described',
-                  updated_at: null,
-                });
-              }
-            } else {
+            if (!contentDesc.trim()) {
               toast.error('Önce içerik tanımlayın');
+              return;
             }
+            await handleSave();
+            // Build segment object directly from current state instead of waiting for query refresh
+            const segmentForGeneration: Segment = {
+              id: segment?.id ?? '',
+              scene_id: sceneId,
+              zone: selected.zone,
+              slice: selected.slice,
+              content_desc: contentDesc,
+              extra_notes: extraNotes || null,
+              generated_prompt: segment?.generated_prompt ?? null,
+              image_url: segment?.image_url ?? null,
+              status: 'described',
+              updated_at: null,
+            };
+            await onGeneratePrompt(segmentForGeneration);
           }}
           disabled={isGenerating || !contentDesc}
           className="flex items-center gap-2 rounded-lg border border-border bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80 disabled:opacity-50"

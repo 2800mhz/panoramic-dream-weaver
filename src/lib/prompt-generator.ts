@@ -1,6 +1,49 @@
-import { supabase } from '@/integrations/supabase/client';
 import { ZONE_NAMES, ZONE_DESCRIPTIONS, SLICE_DESCRIPTIONS } from '@/lib/constants';
 import type { Scene, Segment } from '@/lib/types';
+
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+async function callGemini(systemPrompt: string, userPrompt: string): Promise<string> {
+  const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
+  if (!apiKey) throw new Error('Missing VITE_GOOGLE_GEMINI_API_KEY environment variable. Please add it to your .env file.');
+
+  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      system_instruction: {
+        parts: {
+          text: systemPrompt,
+        },
+      },
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: userPrompt,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        maxOutputTokens: 1024,
+        temperature: 1,
+        topP: 0.95,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Gemini API error ${response.status}: ${err}`);
+  }
+
+  const data = await response.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+}
 
 function buildSystemPrompt(scene: Scene, allSegments: Segment[], targetSegment: Segment): string {
   const segmentList = allSegments
@@ -61,17 +104,8 @@ Output ONLY the unified prompt text. No explanation.`;
 
 export async function generateSegmentPrompt(scene: Scene, allSegments: Segment[], targetSegment: Segment): Promise<string> {
   const systemPrompt = buildSystemPrompt(scene, allSegments, targetSegment);
-
-  const { data, error } = await supabase.functions.invoke('generate-prompt', {
-    body: {
-      systemPrompt,
-      userPrompt: `Generate the image prompt for ${ZONE_NAMES[targetSegment.zone]} — Dilim ${targetSegment.slice}: ${targetSegment.content_desc}`,
-    },
-  });
-
-  if (error) throw error;
-  if (data?.error) throw new Error(data.error);
-  return data.prompt;
+  const userPrompt = `Generate the image prompt for ${ZONE_NAMES[targetSegment.zone]} — Dilim ${targetSegment.slice}: ${targetSegment.content_desc}`;
+  return callGemini(systemPrompt, userPrompt);
 }
 
 export async function generateMasterPrompt(scene: Scene, segments: Segment[]): Promise<string> {
@@ -80,12 +114,5 @@ export async function generateMasterPrompt(scene: Scene, segments: Segment[]): P
   const userPrompt = promptedSegments
     .map(s => `[${ZONE_NAMES[s.zone]} — Dilim ${s.slice}]\n${s.generated_prompt}`)
     .join('\n\n');
-
-  const { data, error } = await supabase.functions.invoke('generate-prompt', {
-    body: { systemPrompt, userPrompt },
-  });
-
-  if (error) throw error;
-  if (data?.error) throw new Error(data.error);
-  return data.prompt;
+  return callGemini(systemPrompt, userPrompt);
 }

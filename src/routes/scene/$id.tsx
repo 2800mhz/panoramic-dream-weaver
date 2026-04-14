@@ -9,7 +9,7 @@ import PromptPreview from '@/components/PromptPreview';
 import type { SegmentPosition, Segment } from '@/lib/types';
 import { ZONE_NAMES } from '@/lib/constants';
 import { toast } from 'sonner';
-import { ArrowLeft, MapPin, Cloud, Calendar, Pencil } from 'lucide-react';
+import { ArrowLeft, MapPin, Cloud, Calendar, Pencil, Copy } from 'lucide-react';
 
 export const Route = createFileRoute('/scene/$id')({
   head: () => ({
@@ -137,6 +137,21 @@ function SceneEditorPage() {
               </div>
             </div>
           </div>
+          {segments.filter(s => s.generated_prompt).length > 0 && (
+            <button
+              onClick={() => {
+                const all = segments
+                  .filter(s => s.generated_prompt)
+                  .map(s => `[${ZONE_NAMES[s.zone]} — Dilim ${s.slice}]\n${s.generated_prompt}`)
+                  .join('\n\n---\n\n');
+                navigator.clipboard.writeText(all);
+                toast.success('Tüm promptlar kopyalandı');
+              }}
+              className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Copy className="h-3.5 w-3.5" /> Tümünü Kopyala
+            </button>
+          )}
         </div>
 
         {/* Main workspace */}
