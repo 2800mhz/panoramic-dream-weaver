@@ -14,7 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      scenes: {
+        Row: {
+          blind_zone_desc: string | null
+          camera_height_cm: number | null
+          created_at: string | null
+          date_label: string | null
+          id: string
+          location_name: string | null
+          notes: string | null
+          season: string | null
+          style_preset: string | null
+          time_of_day: string | null
+          title: string
+          weather: string | null
+        }
+        Insert: {
+          blind_zone_desc?: string | null
+          camera_height_cm?: number | null
+          created_at?: string | null
+          date_label?: string | null
+          id?: string
+          location_name?: string | null
+          notes?: string | null
+          season?: string | null
+          style_preset?: string | null
+          time_of_day?: string | null
+          title: string
+          weather?: string | null
+        }
+        Update: {
+          blind_zone_desc?: string | null
+          camera_height_cm?: number | null
+          created_at?: string | null
+          date_label?: string | null
+          id?: string
+          location_name?: string | null
+          notes?: string | null
+          season?: string | null
+          style_preset?: string | null
+          time_of_day?: string | null
+          title?: string
+          weather?: string | null
+        }
+        Relationships: []
+      }
+      segments: {
+        Row: {
+          content_desc: string | null
+          extra_notes: string | null
+          generated_prompt: string | null
+          id: string
+          image_url: string | null
+          scene_id: string
+          slice: number
+          status: string | null
+          updated_at: string | null
+          zone: number
+        }
+        Insert: {
+          content_desc?: string | null
+          extra_notes?: string | null
+          generated_prompt?: string | null
+          id?: string
+          image_url?: string | null
+          scene_id: string
+          slice: number
+          status?: string | null
+          updated_at?: string | null
+          zone: number
+        }
+        Update: {
+          content_desc?: string | null
+          extra_notes?: string | null
+          generated_prompt?: string | null
+          id?: string
+          image_url?: string | null
+          scene_id?: string
+          slice?: number
+          status?: string | null
+          updated_at?: string | null
+          zone?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "segments_scene_id_fkey"
+            columns: ["scene_id"]
+            isOneToOne: false
+            referencedRelation: "scenes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
