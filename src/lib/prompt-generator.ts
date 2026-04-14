@@ -31,13 +31,13 @@ async function callGroq(systemPrompt: string, userPrompt: string): Promise<strin
     fullContent += chunk.choices[0]?.delta?.content || '';
   }
 
-  return fullContent;
+  return fullContent.trim();
 }
 
 function buildSystemPrompt(scene: Scene, allSegments: Segment[], targetSegment: Segment): string {
   const segmentList = allSegments
     .filter(s => s.content_desc && s.status !== 'empty')
-    .map(s => `Zone ${s.zone} Slice ${s.slice}: ${s.content_desc}`)
+    .map(s => `${ZONE_NAMES[s.zone]} — Dilim ${s.slice}: ${s.content_desc}`)
     .join('\n');
 
   return `You are a cinematic AI image prompt engineer specializing in 360° panoramic photography prompts for text-to-image models.
@@ -88,7 +88,10 @@ Season: ${scene.season || 'Unspecified'}
 Style: ${scene.style_preset || 'photorealistic'}
 Camera height: ${scene.camera_height_cm || 160}cm
 
-Output ONLY the unified prompt text. No explanation.`;
+BLIND ZONE (rear 90°, seam area — always rendered black/dark interior):
+${scene.blind_zone_desc || 'Dark interior'}
+
+Output ONLY the unified prompt text. No explanation, no preamble, no markdown.`;
 }
 
 export async function generateSegmentPrompt(scene: Scene, allSegments: Segment[], targetSegment: Segment): Promise<string> {
