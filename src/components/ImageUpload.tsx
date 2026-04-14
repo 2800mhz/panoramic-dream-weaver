@@ -34,7 +34,9 @@ export default function ImageUpload({ sceneId, currentImageUrl, onUploaded }: Im
       img.onload = () => {
         const ratio = img.width / img.height;
         const target = 32 / 9; // ~3.555
-        const tolerance = 0.3; // Allow some deviation
+        // 0.3 tolerance allows ratios roughly from 3.25:1 to 3.85:1,
+        // accommodating common panoramic formats close to 32:9
+        const tolerance = 0.3;
         if (Math.abs(ratio - target) > tolerance) {
           setAspectWarning(
             `Görüntü oranı ${ratio.toFixed(2)}:1 — 32:9 (${target.toFixed(2)}:1) idealdir. Panoramik görüntü önerilir.`
@@ -103,26 +105,24 @@ export default function ImageUpload({ sceneId, currentImageUrl, onUploaded }: Im
 
   return (
     <div className="space-y-3">
-      <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-        32:9 Panoramik Görüntü
-      </label>
-
       {currentImageUrl ? (
-        <div className="relative overflow-hidden rounded-lg border border-border">
-          <img
-            src={currentImageUrl}
-            alt="Panoramic scene"
-            className="h-auto w-full object-cover"
-            style={{ aspectRatio: '32/9' }}
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-2 right-2 rounded-lg bg-background/80 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-background"
-          >
-            Değiştir
-          </button>
-        </div>
+        <button
+          onClick={() => !uploading && fileInputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+        >
+          {uploading ? (
+            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          ) : (
+            <Upload className="h-3.5 w-3.5" />
+          )}
+          Görüntüyü Değiştir
+        </button>
       ) : (
+        <>
+          <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+            32:9 Panoramik Görüntü
+          </label>
         <div
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
@@ -161,6 +161,7 @@ export default function ImageUpload({ sceneId, currentImageUrl, onUploaded }: Im
             </>
           )}
         </div>
+        </>
       )}
 
       {aspectWarning && (

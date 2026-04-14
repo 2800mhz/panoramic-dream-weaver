@@ -59,6 +59,11 @@ function NewScenePage() {
     }
     setSubmitting(true);
     try {
+      if (!user) {
+        toast.error('Giriş yapmanız gerekiyor');
+        navigate({ to: '/auth/login' });
+        return;
+      }
       const scene = await createScene({
         title: form.title,
         location_name: form.location_name || null,
@@ -70,7 +75,7 @@ function NewScenePage() {
         style_preset: form.style_preset,
         blind_zone_desc: form.blind_zone_desc,
         notes: form.notes || null,
-        user_id: user?.id ?? null,
+        user_id: user.id,
       });
       toast.success('Sahne oluşturuldu');
       navigate({ to: '/scene/$id', params: { id: scene.id } });

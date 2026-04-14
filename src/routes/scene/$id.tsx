@@ -189,28 +189,11 @@ function SceneEditorPage() {
             <>
               <PanoramicViewer imageUrl={scene.image_url} alt={scene.title} />
               <div className="mt-2 flex justify-end">
-                <button
-                  onClick={() => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = 'image/jpeg,image/png,image/webp';
-                    input.onchange = async (e) => {
-                      const file = (e.target as HTMLInputElement).files?.[0];
-                      if (!file) return;
-                      const { supabase } = await import('@/integrations/supabase/client');
-                      const fileExt = file.name.split('.').pop();
-                      const filePath = `${id}/panoramic.${fileExt}`;
-                      const { error } = await supabase.storage.from('scene-images').upload(filePath, file, { upsert: true });
-                      if (error) { toast.error('Yükleme hatası'); return; }
-                      const { data: { publicUrl } } = supabase.storage.from('scene-images').getPublicUrl(filePath);
-                      handleImageUploaded(publicUrl);
-                    };
-                    input.click();
-                  }}
-                  className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Görüntüyü Değiştir
-                </button>
+                <ImageUpload
+                  sceneId={id}
+                  currentImageUrl={scene.image_url}
+                  onUploaded={handleImageUploaded}
+                />
               </div>
             </>
           ) : (
