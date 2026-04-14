@@ -1,7 +1,9 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchScenes, deleteScene } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/hooks/useAuthContext';
+import UserMenu from '@/components/UserMenu';
 import { Plus, MapPin, Cloud, Calendar, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
@@ -17,11 +19,21 @@ export const Route = createFileRoute('/')({
 });
 
 function SceneListPage() {
+  const { user, loading } = useAuthContext();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: scenes, isLoading } = useQuery({
     queryKey: ['scenes'],
     queryFn: fetchScenes,
+    enabled: !!user,
   });
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate({ to: '/auth/login' });
+    }
+  }, [user, loading, navigate]);
 
   // Fetch segment counts
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -56,6 +68,14 @@ function SceneListPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="mx-auto max-w-6xl">
@@ -64,12 +84,15 @@ function SceneListPage() {
             <h1 className="text-3xl font-bold text-foreground">360° VR Sahneler</h1>
             <p className="mt-1 text-sm text-muted-foreground">Panoramik sahne prompt oluşturucu</p>
           </div>
-          <Link
-            to="/scene/new"
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" /> Yeni Sahne
-          </Link>
+          <div className="flex items-center gap-3">
+            <UserMenu />
+            <Link
+              to="/scene/new"
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" /> Yeni Sahne
+            </Link>
+          </div>
         </div>
 
         {isLoading ? (

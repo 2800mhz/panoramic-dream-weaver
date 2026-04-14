@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createScene } from '@/lib/api';
+import { useAuthContext } from '@/hooks/useAuthContext';
 import {
   TIME_OF_DAY_OPTIONS,
   WEATHER_OPTIONS,
@@ -24,7 +25,15 @@ export const Route = createFileRoute('/scene/new')({
 
 function NewScenePage() {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuthContext();
   const [submitting, setSubmitting] = useState(false);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate({ to: '/auth/login' });
+    }
+  }, [user, authLoading, navigate]);
 
   const [form, setForm] = useState({
     title: '',
@@ -50,6 +59,11 @@ function NewScenePage() {
     }
     setSubmitting(true);
     try {
+      if (!user) {
+        toast.error('Giriş yapmanız gerekiyor');
+        navigate({ to: '/auth/login' });
+        return;
+      }
       const scene = await createScene({
         title: form.title,
         location_name: form.location_name || null,
@@ -61,6 +75,7 @@ function NewScenePage() {
         style_preset: form.style_preset,
         blind_zone_desc: form.blind_zone_desc,
         notes: form.notes || null,
+        user_id: user.id,
       });
       toast.success('Sahne oluşturuldu');
       navigate({ to: '/scene/$id', params: { id: scene.id } });

@@ -21,12 +21,14 @@ export type Database = {
           created_at: string | null
           date_label: string | null
           id: string
+          image_url: string | null
           location_name: string | null
           notes: string | null
           season: string | null
           style_preset: string | null
           time_of_day: string | null
           title: string
+          user_id: string | null
           weather: string | null
         }
         Insert: {
@@ -35,12 +37,14 @@ export type Database = {
           created_at?: string | null
           date_label?: string | null
           id?: string
+          image_url?: string | null
           location_name?: string | null
           notes?: string | null
           season?: string | null
           style_preset?: string | null
           time_of_day?: string | null
           title: string
+          user_id?: string | null
           weather?: string | null
         }
         Update: {
@@ -49,12 +53,14 @@ export type Database = {
           created_at?: string | null
           date_label?: string | null
           id?: string
+          image_url?: string | null
           location_name?: string | null
           notes?: string | null
           season?: string | null
           style_preset?: string | null
           time_of_day?: string | null
           title?: string
+          user_id?: string | null
           weather?: string | null
         }
         Relationships: []
