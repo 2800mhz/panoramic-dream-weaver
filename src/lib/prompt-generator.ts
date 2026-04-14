@@ -1,48 +1,37 @@
 import { ZONE_NAMES, ZONE_DESCRIPTIONS, SLICE_DESCRIPTIONS } from '@/lib/constants';
 import type { Scene, Segment } from '@/lib/types';
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+import { Groq } from 'groq-sdk';
 
-async function callGemini(systemPrompt: string, userPrompt: string): Promise<string> {
-  const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
-  if (!apiKey) throw new Error('Missing VITE_GOOGLE_GEMINI_API_KEY environment variable. Please add it to your .env file.');
+const GROQ_API_KEY = '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';
+const groq = new Groq({ apiKey: GROQ_API_KEY, dangerouslyAllowBrowser: true });
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      system_instruction: {
-        parts: {
-          text: systemPrompt,
-        },
+async function callGroq(systemPrompt: string, userPrompt: string): Promise<string> {
+  const chatCompletion = await groq.chat.completions.create({
+    messages: [
+      {
+        role: 'system',
+        content: systemPrompt
       },
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            {
-              text: userPrompt,
-            },
-          ],
-        },
-      ],
-      generationConfig: {
-        maxOutputTokens: 1024,
-        temperature: 1,
-        topP: 0.95,
-      },
-    }),
+      {
+        role: 'user',
+        content: userPrompt
+      }
+    ],
+    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    temperature: 1,
+    max_completion_tokens: 1024,
+    top_p: 1,
+    stream: true,
+    stop: null
   });
 
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Gemini API error ${response.status}: ${err}`);
+  let fullContent = '';
+  for await (const chunk of chatCompletion) {
+    fullContent += chunk.choices[0]?.delta?.content || '';
   }
 
-  const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  return fullContent;
 }
 
 function buildSystemPrompt(scene: Scene, allSegments: Segment[], targetSegment: Segment): string {
@@ -105,7 +94,7 @@ Output ONLY the unified prompt text. No explanation.`;
 export async function generateSegmentPrompt(scene: Scene, allSegments: Segment[], targetSegment: Segment): Promise<string> {
   const systemPrompt = buildSystemPrompt(scene, allSegments, targetSegment);
   const userPrompt = `Generate the image prompt for ${ZONE_NAMES[targetSegment.zone]} — Dilim ${targetSegment.slice}: ${targetSegment.content_desc}`;
-  return callGemini(systemPrompt, userPrompt);
+  return callGroq(systemPrompt, userPrompt);
 }
 
 export async function generateMasterPrompt(scene: Scene, segments: Segment[]): Promise<string> {
@@ -114,5 +103,5 @@ export async function generateMasterPrompt(scene: Scene, segments: Segment[]): P
   const userPrompt = promptedSegments
     .map(s => `[${ZONE_NAMES[s.zone]} — Dilim ${s.slice}]\n${s.generated_prompt}`)
     .join('\n\n');
-  return callGemini(systemPrompt, userPrompt);
+  return callGroq(systemPrompt, userPrompt);
 }
