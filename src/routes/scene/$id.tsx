@@ -1,8 +1,12 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, useCallback } from 'react';
-import { fetchScene, fetchSegments, upsertSegment } from '@/lib/api';
+import { useState, useCallback, useEffect } from 'react';
+import { fetchScene, fetchSegments, upsertSegment, updateScene } from '@/lib/api';
 import { generateSegmentPrompt, generateMasterPrompt } from '@/lib/prompt-generator';
+import { useAuthContext } from '@/hooks/useAuthContext';
+import UserMenu from '@/components/UserMenu';
+import ImageUpload from '@/components/ImageUpload';
+import PanoramicViewer from '@/components/PanoramicViewer';
 import ZoneDiagram from '@/components/ZoneDiagram';
 import SegmentPanel from '@/components/SegmentPanel';
 import PromptPreview from '@/components/PromptPreview';
@@ -23,20 +27,31 @@ export const Route = createFileRoute('/scene/$id')({
 
 function SceneEditorPage() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuthContext();
   const queryClient = useQueryClient();
   const [selectedSegment, setSelectedSegment] = useState<SegmentPosition | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [masterPrompt, setMasterPrompt] = useState('');
   const [isGeneratingMaster, setIsGeneratingMaster] = useState(false);
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate({ to: '/auth/login' });
+    }
+  }, [user, authLoading, navigate]);
+
   const { data: scene, isLoading: sceneLoading } = useQuery({
     queryKey: ['scene', id],
     queryFn: () => fetchScene(id),
+    enabled: !!user,
   });
 
   const { data: segments = [], isLoading: segmentsLoading } = useQuery({
     queryKey: ['segments', id],
     queryFn: () => fetchSegments(id),
+    enabled: !!user,
   });
 
   const invalidateSegments = useCallback(() => {
@@ -84,6 +99,15 @@ function SceneEditorPage() {
       setIsGeneratingMaster(false);
     }
   }, [scene, segments]);
+
+  const handleImageUploaded = useCallback(async (url: string) => {
+    try {
+      await updateScene(id, { image_url: url });
+      queryClient.invalidateQueries({ queryKey: ['scene', id] });
+    } catch {
+      toast.error('Görüntü URL\'si kaydedilemedi');
+    }
+  }, [id, queryClient]);
 
   if (sceneLoading || segmentsLoading) {
     return (
@@ -155,7 +179,47 @@ function SceneEditorPage() {
                 <Copy className="h-3.5 w-3.5" /> Tümünü Kopyala
               </button>
             )}
+            <UserMenu />
           </div>
+        </div>
+
+        {/* Panoramic Image Section */}
+        <div className="mb-6">
+          {scene.image_url ? (
+            <>
+              <PanoramicViewer imageUrl={scene.image_url} alt={scene.title} />
+              <div className="mt-2 flex justify-end">
+                <button
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/jpeg,image/png,image/webp';
+                    input.onchange = async (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (!file) return;
+                      const { supabase } = await import('@/integrations/supabase/client');
+                      const fileExt = file.name.split('.').pop();
+                      const filePath = `${id}/panoramic.${fileExt}`;
+                      const { error } = await supabase.storage.from('scene-images').upload(filePath, file, { upsert: true });
+                      if (error) { toast.error('Yükleme hatası'); return; }
+                      const { data: { publicUrl } } = supabase.storage.from('scene-images').getPublicUrl(filePath);
+                      handleImageUploaded(publicUrl);
+                    };
+                    input.click();
+                  }}
+                  className="flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Görüntüyü Değiştir
+                </button>
+              </div>
+            </>
+          ) : (
+            <ImageUpload
+              sceneId={id}
+              currentImageUrl={scene.image_url}
+              onUploaded={handleImageUploaded}
+            />
+          )}
         </div>
 
         {/* Main workspace */}
