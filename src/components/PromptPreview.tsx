@@ -35,15 +35,14 @@ export default function PromptPreview({ segments, onGenerateMaster, masterPrompt
 
   return (
     <div className="mt-6 rounded-xl border border-border bg-card">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-between p-4"
-      >
-        <div className="flex gap-2">
+      <div className="flex w-full items-center justify-between p-4">
+        <div className="flex gap-2" role="tablist">
           {tabs.map(tab => (
             <button
               key={tab.key}
-              onClick={e => { e.stopPropagation(); setActiveTab(tab.key); setExpanded(true); }}
+              role="tab"
+              aria-selected={activeTab === tab.key}
+              onClick={() => { setActiveTab(tab.key); setExpanded(true); }}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 activeTab === tab.key
                   ? 'bg-primary text-primary-foreground'
@@ -54,8 +53,14 @@ export default function PromptPreview({ segments, onGenerateMaster, masterPrompt
             </button>
           ))}
         </div>
-        {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-      </button>
+        <button
+          onClick={() => setExpanded(!expanded)}
+          aria-expanded={expanded}
+          className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </button>
+      </div>
 
       {expanded && (
         <div className="border-t border-border p-4">
