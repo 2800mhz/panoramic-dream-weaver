@@ -79,7 +79,9 @@ export default function ImageUpload({ sceneId, currentImageUrl, onUploaded }: Im
         .from('scene-images')
         .getPublicUrl(filePath);
 
-      onUploaded(publicUrl);
+      // Append cache-busting parameter to prevent stale/cached 400 responses
+      const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`;
+      onUploaded(urlWithCacheBust);
       toast.success('Görüntü yüklendi');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Yükleme hatası';
