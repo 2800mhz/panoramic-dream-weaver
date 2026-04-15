@@ -56,6 +56,7 @@ export default function PromptPreview({ segments, onGenerateMaster, masterPrompt
         <button
           onClick={() => setExpanded(!expanded)}
           aria-expanded={expanded}
+          aria-label="Toggle preview"
           className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
         >
           {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}

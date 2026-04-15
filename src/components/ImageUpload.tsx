@@ -70,13 +70,13 @@ export default function ImageUpload({ sceneId, currentImageUrl, onUploaded }: Im
       const filePath = `${sceneId}/panoramic.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('scene-images')
+        .from('scenes')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('scene-images')
+        .from('scenes')
         .getPublicUrl(filePath);
 
       // Append cache-busting parameter to prevent stale/cached 400 responses
