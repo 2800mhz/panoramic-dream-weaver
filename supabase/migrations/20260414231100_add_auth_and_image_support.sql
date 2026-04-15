@@ -44,32 +44,32 @@ CREATE POLICY "Users can delete own segments" ON public.segments
 
 -- Create storage bucket for scene images (if using Supabase Storage)
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('scene-images', 'scene-images', true)
+VALUES ('scenes', 'scenes', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Storage policies for scene-images bucket
+-- Storage policies for scenes bucket
 CREATE POLICY "Authenticated users can upload scene images" ON storage.objects
   FOR INSERT TO authenticated
   WITH CHECK (
-    bucket_id = 'scene-images'
+    bucket_id = 'scenes'
     AND (storage.foldername(name))[1] IN (
       SELECT id::text FROM public.scenes WHERE user_id = auth.uid()
     )
   );
 
 CREATE POLICY "Anyone can view scene images" ON storage.objects
-  FOR SELECT USING (bucket_id = 'scene-images');
+  FOR SELECT USING (bucket_id = 'scenes');
 
 CREATE POLICY "Users can update own scene images" ON storage.objects
   FOR UPDATE TO authenticated
   USING (
-    bucket_id = 'scene-images'
+    bucket_id = 'scenes'
     AND (storage.foldername(name))[1] IN (
       SELECT id::text FROM public.scenes WHERE user_id = auth.uid()
     )
   )
   WITH CHECK (
-    bucket_id = 'scene-images'
+    bucket_id = 'scenes'
     AND (storage.foldername(name))[1] IN (
       SELECT id::text FROM public.scenes WHERE user_id = auth.uid()
     )
@@ -78,7 +78,7 @@ CREATE POLICY "Users can update own scene images" ON storage.objects
 CREATE POLICY "Users can delete own scene images" ON storage.objects
   FOR DELETE TO authenticated
   USING (
-    bucket_id = 'scene-images'
+    bucket_id = 'scenes'
     AND (storage.foldername(name))[1] IN (
       SELECT id::text FROM public.scenes WHERE user_id = auth.uid()
     )

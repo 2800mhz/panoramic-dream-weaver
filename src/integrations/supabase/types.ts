@@ -67,11 +67,14 @@ export type Database = {
       }
       segments: {
         Row: {
+          camera_speed: string | null
           content_desc: string | null
           extra_notes: string | null
           generated_prompt: string | null
           id: string
           image_url: string | null
+          lighting_direction: string | null
+          motion_type: string | null
           scene_id: string
           slice: number
           status: string | null
@@ -79,11 +82,14 @@ export type Database = {
           zone: number
         }
         Insert: {
+          camera_speed?: string | null
           content_desc?: string | null
           extra_notes?: string | null
           generated_prompt?: string | null
           id?: string
           image_url?: string | null
+          lighting_direction?: string | null
+          motion_type?: string | null
           scene_id: string
           slice: number
           status?: string | null
@@ -91,11 +97,14 @@ export type Database = {
           zone: number
         }
         Update: {
+          camera_speed?: string | null
           content_desc?: string | null
           extra_notes?: string | null
           generated_prompt?: string | null
           id?: string
           image_url?: string | null
+          lighting_direction?: string | null
+          motion_type?: string | null
           scene_id?: string
           slice?: number
           status?: string | null
