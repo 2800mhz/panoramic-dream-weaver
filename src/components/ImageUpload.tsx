@@ -69,9 +69,22 @@ export default function ImageUpload({ sceneId, currentImageUrl, onUploaded }: Im
       const fileExt = file.name.split('.').pop();
       const filePath = `${sceneId}/panoramic.${fileExt}`;
 
+      // Remove any existing files in the scene folder before uploading.
+      // This avoids relying on upsert which can trigger RLS evaluation
+      // issues when storage policies reference RLS-protected tables.
+      const { data: existingFiles } = await supabase.storage
+        .from('scenes')
+        .list(sceneId);
+
+      if (existingFiles && existingFiles.length > 0) {
+        await supabase.storage
+          .from('scenes')
+          .remove(existingFiles.map(f => `${sceneId}/${f.name}`));
+      }
+
       const { error: uploadError } = await supabase.storage
         .from('scenes')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
