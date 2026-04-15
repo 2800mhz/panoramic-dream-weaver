@@ -259,7 +259,10 @@ export default function PanoramicViewer({ imageUrl, alt = 'Panoramic view' }: Pa
         style={{ aspectRatio: '32/9' }}
       >
         <div className="flex h-full items-center justify-center">
-          <p className="text-muted-foreground">Görüntü yüklenemedi</p>
+          <div className="text-center">
+            <p className="text-muted-foreground mb-2">Görüntü yüklenemedi</p>
+            <p className="text-xs text-muted-foreground break-all px-4">{imageUrl}</p>
+          </div>
         </div>
       </div>
     );
