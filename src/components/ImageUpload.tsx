@@ -77,9 +77,10 @@ export default function ImageUpload({ sceneId, currentImageUrl, onUploaded }: Im
         .list(sceneId);
 
       if (existingFiles && existingFiles.length > 0) {
-        await supabase.storage
+        const { error: removeError } = await supabase.storage
           .from('scenes')
           .remove(existingFiles.map(f => `${sceneId}/${f.name}`));
+        if (removeError) throw removeError;
       }
 
       const { error: uploadError } = await supabase.storage
