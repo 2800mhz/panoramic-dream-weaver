@@ -13,6 +13,7 @@ export default function PanoramicViewer({ imageUrl, alt = 'Panoramic view' }: Pa
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const handleZoomIn = useCallback(() => {
     setScale(prev => Math.min(prev + 0.25, 5));
@@ -104,6 +105,19 @@ export default function PanoramicViewer({ imageUrl, alt = 'Panoramic view' }: Pa
     return () => window.removeEventListener('keydown', handleKey);
   }, [isFullscreen]);
 
+  if (imageError) {
+    return (
+      <div
+        className="relative rounded-lg border border-border bg-black"
+        style={{ aspectRatio: '32/9' }}
+      >
+        <div className="flex h-full items-center justify-center">
+          <p className="text-muted-foreground">Görüntü yüklenemedi</p>
+        </div>
+      </div>
+    );
+  }
+
   const viewerContent = (
     <div
       ref={containerRef}
@@ -123,6 +137,7 @@ export default function PanoramicViewer({ imageUrl, alt = 'Panoramic view' }: Pa
       <img
         src={imageUrl}
         alt={alt}
+        onError={() => setImageError(true)}
         className="h-full w-full select-none object-contain"
         style={{
           transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
