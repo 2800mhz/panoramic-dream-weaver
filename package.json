@@ -1,6 +1,7 @@
 {
-  "name": "tanstack_start_ts",
+  "name": "panoramic-dream-weaver",
   "private": true,
+  "description": "Segment-based 360 panoramic scene prompt builder for AI image and video generation.",
   "sideEffects": false,
   "type": "module",
   "scripts": {

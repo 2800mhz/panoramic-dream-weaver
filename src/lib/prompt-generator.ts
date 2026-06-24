@@ -3,10 +3,22 @@ import type { Scene, Segment } from '@/lib/types';
 
 import { Groq } from 'groq-sdk';
 
-const GROQ_API_KEY = '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';
-const groq = new Groq({ apiKey: GROQ_API_KEY, dangerouslyAllowBrowser: true });
+function getGroqApiKey(): string {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY || process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      'Missing Groq API key. Set VITE_GROQ_API_KEY in your local .env file before generating prompts.'
+    );
+  }
+  return apiKey;
+}
+
+function getGroqClient(): Groq {
+  return new Groq({ apiKey: getGroqApiKey(), dangerouslyAllowBrowser: true });
+}
 
 async function callGroq(systemPrompt: string, userPrompt: string): Promise<string> {
+  const groq = getGroqClient();
   const chatCompletion = await groq.chat.completions.create({
     messages: [
       {
